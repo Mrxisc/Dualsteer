@@ -1,0 +1,65 @@
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+WORKSPACE_ROOT="$(cd "${ROOT_DIR}/.." && pwd)"
+FLUX_CKPT="${FLUX_CKPT:-${ROOT_DIR}/Models/FLUX.1-dev}"
+PROMPTS_CSV="${PROMPTS_CSV:-${ROOT_DIR}/Datasets/i2p_benchmark.csv}"
+SAVE_ROOT="${SAVE_ROOT:-${ROOT_DIR}/Results/i2p_flux_doubleblock+preintercept}"
+SAE_DOUBLE_CHECKPOINT="${SAE_DOUBLE_CHECKPOINT:-${ROOT_DIR}/SAEs/flux_real_doubleblock18_i2p_no_sexual_i2p_no_sexual_flux_real}"
+DOUBLE_HOOKPOINT=${DOUBLE_HOOKPOINT:-"transformer.double_transformer_blocks.18"}
+ACTIVATIONS_ROOT="${ACTIVATIONS_ROOT:-${ROOT_DIR}/Activations/i2p_no_sexual_flux_real}"
+SAE_TAG=${SAE_TAG:-"doubleblock18"}
+SAE_STRENGTH=${SAE_STRENGTH:-"0.2"}
+STEPS=${STEPS:-30}
+GUIDANCE=${GUIDANCE:-7.0}
+NUM_IMAGES=${NUM_IMAGES:-10}
+BATCH_SIZE=${BATCH_SIZE:-2}
+HEIGHT=${HEIGHT:-256}
+WIDTH=${WIDTH:-256}
+NEG_PROMPT=${NEG_PROMPT:-""}
+SEED_BASE=${SEED_BASE:-42}
+DTYPE=${DTYPE:-fp16}
+
+cd "${ROOT_DIR}"
+export PYTHONPATH="${ROOT_DIR}:${PYTHONPATH:-}"
+
+LOG_DIR="${ROOT_DIR}/Logs"
+mkdir -p "${LOG_DIR}"
+TS=$(date +"%Y%m%d_%H%M%S")
+LOG_FILE="${LOG_DIR}/generate_flux_image_pool+double_i2p47030_${TS}.log"
+
+{
+  echo "timestamp=${TS}"
+  echo "flux_ckpt=${FLUX_CKPT}"
+  echo "prompts_csv=${PROMPTS_CSV}"
+  echo "save_root=${SAVE_ROOT}"
+  echo "sae_double_checkpoint=${SAE_DOUBLE_CHECKPOINT}"
+  echo "double_hookpoint=${DOUBLE_HOOKPOINT}"
+  echo "activations_root=${ACTIVATIONS_ROOT}"
+  echo "sae_tag=${SAE_TAG} sae_strength=${SAE_STRENGTH}"
+  echo "steps=${STEPS} guidance=${GUIDANCE} num_images=${NUM_IMAGES} batch_size=${BATCH_SIZE}"
+  echo "height=${HEIGHT} width=${WIDTH} seed_base=${SEED_BASE} dtype=${DTYPE}"
+  echo "negative_prompt=${NEG_PROMPT}"
+
+  python "${ROOT_DIR}/Scripts/generate/generate_flux_image_i2p_47030_doubleblocks.py" \
+    --flux-ckpt "${FLUX_CKPT}" \
+    --prompts-csv "${PROMPTS_CSV}" \
+    --save-root "${SAVE_ROOT}" \
+    --sae-double-checkpoint "${SAE_DOUBLE_CHECKPOINT}" \
+    --double-hookpoint "${DOUBLE_HOOKPOINT}" \
+    --activations-root "${ACTIVATIONS_ROOT}" \
+    --sae-tag "${SAE_TAG}" \
+    --sae-strength "${SAE_STRENGTH}" \
+    --steps "${STEPS}" \
+    --guidance-scale "${GUIDANCE}" \
+    --num-images-per-prompt "${NUM_IMAGES}" \
+    --batch-size "${BATCH_SIZE}" \
+    --height "${HEIGHT}" \
+    --width "${WIDTH}" \
+    --negative-prompt "${NEG_PROMPT}" \
+    --seed-base "${SEED_BASE}" \
+    --dtype "${DTYPE}" \
+    2>&1
+} | tee "${LOG_FILE}"
+
+echo "Logs: ${LOG_FILE}"

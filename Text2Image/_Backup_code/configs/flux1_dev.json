@@ -1,0 +1,12 @@
+{
+  "sample_size": 128,
+  "latent_channels": 64,
+  "in_channels": 256,
+  "latent_dim": 4096,
+  "cond_dim": 4096,
+  "double_blocks": 6,
+  "single_blocks": 12,
+  "num_heads": 16,
+  "mlp_ratio": 4.0,
+  "dropout": 0.0
+}
